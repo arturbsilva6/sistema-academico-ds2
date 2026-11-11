@@ -1,17 +1,10 @@
 /*
- * SERVICE DE ALUNOS - VERSÃO 1.1
- *
- * O AlunoService é responsável pela comunicação
- * entre o frontend e a API.
- *
- * O Controller não precisa conhecer os detalhes
- * do fetch() e dos cabeçalhos que serão enviados.
+ * O Service concentra a comunicação do frontend
+ * com a API de alunos.
  */
 const AlunoService = {
-
     /*
-     * Endereço base dos endpoints relacionados
-     * aos alunos.
+     * Endereço base dos endpoints de alunos.
      */
     URL_API: "http://localhost:3000/api/alunos",
 
@@ -19,129 +12,162 @@ const AlunoService = {
      * Processa uma resposta recebida da API.
      */
     async processarResposta(resposta) {
+        let resultado;
 
         try {
-
             /*
-             * Converte o JSON recebido em
+             * Converte a resposta JSON para
              * um objeto JavaScript.
              */
-            const resultado = await resposta.json();
-
-            /*
-             * A propriedade ok será verdadeira para
-             * respostas entre 200 e 299.
-             */
-            if (!resposta.ok) {
-
-                /*
-                 * Utiliza a mensagem enviada pela API.
-                 *
-                 * Se ela não existir, utiliza uma
-                 * mensagem padrão.
-                 */
-                throw new Error(
-                    resultado.mensagem ||
-                    "Não foi possível concluir a operação."
-                );
-            }
-
-            /*
-             * Devolve o objeto JavaScript para quem
-             * chamou o Service.
-             */
-            return resultado;
-
+            resultado = await resposta.json();
         } catch (erro) {
-
-            /*
-             * Se o servidor retornar um JSON inválido.
-             */
-            if (erro instanceof SyntaxError) {
-                throw new Error(
-                    "O servidor retornou uma resposta inválida."
-                );
-            }
-
-            throw erro;
+            throw new Error(
+                "O servidor retornou uma resposta inválida."
+            );
         }
+
+        /*
+         * resposta.ok será false em respostas
+         * como 400, 404, 409 e 500.
+         */
+        if (!resposta.ok) {
+            throw new Error(
+                resultado.mensagem ||
+                "Não foi possível concluir a operação."
+            );
+        }
+
+        return resultado;
     },
 
     /*
-     * Executa uma requisição e trata possíveis
-     * problemas de conexão com o backend.
+     * Executa uma requisição para a API.
+     *
+     * caminho:
+     * complemento adicionado à URL.
+     *
+     * Exemplos:
+     *
+     * ""   → /api/alunos
+     * "/1" → /api/alunos/1
      */
-    async requisitar(opcoes = {}) {
-
+    async requisitar(caminho = "", opcoes = {}) {
         let resposta;
 
         try {
-
-            /*
-             * fetch() envia a requisição para a API.
-             *
-             * O segundo argumento contém as opções,
-             * como método, cabeçalhos e corpo.
-             */
             resposta = await fetch(
-                AlunoService.URL_API,
+                `${AlunoService.URL_API}${caminho}`,
                 opcoes
             );
-
         } catch (erro) {
-
-            /*
-             * Esse bloco será executado quando não for
-             * possível estabelecer comunicação.
-             *
-             * Exemplos:
-             * - servidor desligado;
-             * - endereço incorreto;
-             * - problema de rede;
-             * - bloqueio de CORS.
-             */
             throw new Error(
                 "Não foi possível conectar ao servidor."
             );
         }
 
-        /*
-         * Depois de receber a resposta, encaminhamos
-         * seu processamento para outro método.
-         */
         return AlunoService.processarResposta(resposta);
     },
 
     /*
-     * Solicita a lista de alunos.
+     * Lista todos os alunos.
      *
-     * Como GET é o método padrão do fetch(),
-     * poderíamos omitir a propriedade method.
+     * GET /api/alunos
      */
     async listar() {
-
-        const resultado = await AlunoService.requisitar({
-            method: "GET"
-        });
+        const resultado =
+            await AlunoService.requisitar("", {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json"
+                }
+            });
 
         return resultado.dados;
     },
 
     /*
-     * Envia os dados de um novo aluno para a API.
+     * Consulta um aluno pelo ID.
+     *
+     * GET /api/alunos/:id
      */
-    async cadastrar(dados) {
+    async buscarPorId(id) {
+        /*
+         * encodeURIComponent() prepara o valor
+         * para ser utilizado em uma URL.
+         */
+        const idSeguro = encodeURIComponent(id);
 
-        const resultado = await AlunoService.requisitar({
+        const resultado =
+            await AlunoService.requisitar(
+                `/${idSeguro}`,
+                {
+                    method: "GET",
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                }
+            );
+
+        return resultado.dados;
+    },
+
+    /*
+     * Cadastra um aluno.
+     *
+     * POST /api/alunos
+     */
+    async cadastrar(aluno) {
+        return AlunoService.requisitar("", {
             method: "POST",
-
             headers: {
+                "Accept": "application/json",
                 "Content-Type": "application/json"
             },
-
-            body: JSON.stringify(dados)
+            body: JSON.stringify(aluno)
         });
+    },
 
-        return resultado;
+    /*
+     * Atualiza um aluno.
+     *
+     * PUT /api/alunos/:id
+     */
+    async atualizar(id, aluno) {
+        const idSeguro = encodeURIComponent(id);
+
+        return AlunoService.requisitar(
+            `/${idSeguro}`,
+            {
+                method: "PUT",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+
+                /*
+                 * Converte os novos dados para JSON.
+                 */
+                body: JSON.stringify(aluno)
+            }
+        );
+    },
+
+    /*
+     * Exclui um aluno.
+     *
+     * DELETE /api/alunos/:id
+     */
+    async remover(id) {
+        const idSeguro = encodeURIComponent(id);
+
+        return AlunoService.requisitar(
+            `/${idSeguro}`,
+            {
+                method: "DELETE",
+                headers: {
+                    "Accept": "application/json"
+                }
+            }
+        );
     }
 };

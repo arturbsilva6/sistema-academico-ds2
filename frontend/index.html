@@ -30,7 +30,7 @@
             <h1>Sistema Acadêmico DS II</h1>
 
             <p>
-                Versão 0.2 - cadastro de alunos com DOM e eventos
+                Versão 1.4 - CRUD completo de alunos (frontend + API)
             </p>
         </div>
     </header>
@@ -81,12 +81,39 @@
 
                 </div>
 
+                <!--
+                    Agrupa os botões utilizados pelo formulário.
+                -->
                 <div class="acoes-formulario">
+                    <!--
+                        Envia o formulário.
 
-                    <button type="submit" id="btn-cadastrar">
+                        Seu texto será modificado pela View:
+                        - Cadastrar aluno;
+                        - Atualizar aluno;
+                        - Salvando...;
+                        - Atualizando...
+                    -->
+                    <button
+                        id="botao-salvar"
+                        type="submit">
                         Cadastrar aluno
                     </button>
 
+                    <!--
+                        Cancela uma edição e devolve o formulário
+                        para o modo de cadastro.
+
+                        O atributo hidden mantém o botão escondido
+                        enquanto nenhum aluno estiver em edição.
+                    -->
+                    <button
+                        id="botao-cancelar"
+                        class="botao-secundario"
+                        type="button"
+                        hidden>
+                        Cancelar edição
+                    </button>
                 </div>
 
             </form>
@@ -120,6 +147,7 @@
                             <th>Curso</th>
                             <th>Turma</th>
                             <th>Situação</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
 
@@ -148,4 +176,4 @@
 
 </body>
 
-</html>
+</html>
